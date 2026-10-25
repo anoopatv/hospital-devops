@@ -8,6 +8,8 @@ The focus of this project is the DevOps part: containerizing the app and deployi
 
 - Python (Flask)
 - Docker
+- PostgreSQL
+- Docker Compose
 - Git and GitHub
 
 ## API Endpoints
@@ -24,8 +26,7 @@ Doctors available: `dr-anil`, `dr-meera`, `dr-suresh`
 ## Run with Docker
 
 ```
-docker build -t hospital-token .
-docker run -p 5000:5000 hospital-token
+docker compose up --build
 ```
 
 Then open `http://localhost:5000/token/dr-anil/new` in the browser.
@@ -34,7 +35,7 @@ Then open `http://localhost:5000/token/dr-anil/new` in the browser.
 
 - [x] Flask app
 - [x] Dockerfile
-- [ ] PostgreSQL database with docker-compose
+- [x] PostgreSQL database with docker-compose
 - [ ] AWS infrastructure with Terraform
 - [ ] Kubernetes deployment
 - [ ] CI/CD pipeline with GitHub Actions
