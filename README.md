@@ -10,6 +10,8 @@ The focus of this project is the DevOps part: containerizing the app and deployi
 - Docker
 - PostgreSQL
 - Docker Compose
+- Terraform
+- AWS (EC2, Security Groups)
 - Git and GitHub
 
 ## API Endpoints
@@ -36,7 +38,7 @@ Then open `http://localhost:5000/token/dr-anil/new` in the browser.
 - [x] Flask app
 - [x] Dockerfile
 - [x] PostgreSQL database with docker-compose
-- [ ] AWS infrastructure with Terraform
+- [x] AWS infrastructure with Terraform
 - [ ] Kubernetes deployment
 - [ ] CI/CD pipeline with GitHub Actions
 - [ ] Monitoring with Prometheus and Grafana
