@@ -45,6 +45,20 @@ Then open `http://localhost:5000/token/dr-anil/new` in the browser.
 
 The AWS infrastructure (EC2, Security Group, ECR, IAM role) is created with Terraform.
 
+## Screenshots
+
+**CI/CD pipeline (GitHub Actions)**
+
+![Pipeline](docs/pipeline.png)
+
+**EC2 server created with Terraform**
+
+![EC2](docs/ec2.png)
+
+**App running on AWS**
+
+![App](docs/app.png)
+
 ## Project Progress
 
 - [x] Flask app
