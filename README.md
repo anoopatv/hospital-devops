@@ -12,6 +12,9 @@ The focus of this project is the DevOps part: containerizing the app and deployi
 - Docker Compose
 - Terraform
 - AWS (EC2, Security Groups)
+- Amazon ECR
+- GitHub Actions
+- AWS Systems Manager (SSM)
 - Git and GitHub
 
 ## API Endpoints
@@ -33,6 +36,15 @@ docker compose up --build
 
 Then open `http://localhost:5000/token/dr-anil/new` in the browser.
 
+## How It Works
+
+1. Code is pushed to the `main` branch on GitHub.
+2. GitHub Actions builds the Docker image and pushes it to Amazon ECR.
+3. GitHub Actions uses AWS SSM to run the deployment on the EC2 server.
+4. The EC2 server pulls the new image and runs the app with a PostgreSQL container.
+
+The AWS infrastructure (EC2, Security Group, ECR, IAM role) is created with Terraform.
+
 ## Project Progress
 
 - [x] Flask app
@@ -40,5 +52,5 @@ Then open `http://localhost:5000/token/dr-anil/new` in the browser.
 - [x] PostgreSQL database with docker-compose
 - [x] AWS infrastructure with Terraform
 - [ ] Kubernetes deployment
-- [ ] CI/CD pipeline with GitHub Actions
+- [x] CI/CD pipeline with GitHub Actions
 - [ ] Monitoring with Prometheus and Grafana
