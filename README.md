@@ -14,6 +14,7 @@ The focus of this project is the DevOps part: containerizing the app and deployi
 - AWS (EC2, Security Groups)
 - Amazon ECR
 - GitHub Actions
+- Kubernetes (Docker Desktop, local cluster)
 - AWS Systems Manager (SSM)
 - Git and GitHub
 
@@ -59,12 +60,16 @@ The AWS infrastructure (EC2, Security Group, ECR, IAM role) is created with Terr
 
 ![App](docs/app.png)
 
+**Kubernetes pods running locally**
+
+![Kubernetes](docs/k8s.png)
+
 ## Project Progress
 
 - [x] Flask app
 - [x] Dockerfile
 - [x] PostgreSQL database with docker-compose
 - [x] AWS infrastructure with Terraform
-- [ ] Kubernetes deployment
+- [x] Kubernetes deployment
 - [x] CI/CD pipeline with GitHub Actions
 - [ ] Monitoring with Prometheus and Grafana
