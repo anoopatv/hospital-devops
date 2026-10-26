@@ -29,6 +29,7 @@ resource "aws_instance" "app" {
   ami                    = data.aws_ssm_parameter.al2023.value
   instance_type          = "t3.micro"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
+    iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   # server thudangumbol Docker install cheyyunnu
   user_data = <<-EOF
