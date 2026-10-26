@@ -1,0 +1,62 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REPOSITORY: hospital-token
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          docker build -t $IMAGE:latest -t $IMAGE:${{ github.sha }} .
+          docker push $IMAGE:latest
+          docker push $IMAGE:${{ github.sha }}
+
+      - name: Deploy to EC2 using SSM
+        run: |
+          cat > deploy.sh <<'EOF'
+          export HOME=/root
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          docker network create hospital-net || true
+          docker start db || docker run -d --name db --network hospital-net --restart unless-stopped -e POSTGRES_DB=hospital -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -v pgdata:/var/lib/postgresql/data postgres:16
+          docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          docker rm -f app || true
+          docker run -d --name app --network hospital-net --restart unless-stopped -p 5000:5000 -e DB_HOST=db -e DB_NAME=hospital -e DB_USER=postgres -e DB_PASSWORD=postgres ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          EOF
+          jq -R -s '{commands: (split("\n") | map(select(length>0)))}' deploy.sh > params.json
+          CMD_ID=$(aws ssm send-command \
+            --document-name AWS-RunShellScript \
+            --targets "Key=tag:Name,Values=hospital-token-server" \
+            --parameters file://params.json \
+            --query "Command.CommandId" --output text)
+          echo "Command ID: $CMD_ID"
+          sleep 10
+          for i in $(seq 1 30); do
+            STATUS=$(aws ssm list-command-invocations --command-id $CMD_ID --query "CommandInvocations[0].Status" --output text)
+            echo "Status: $STATUS"
+            if [ "$STATUS" = "Success" ]; then exit 0; fi
+            if [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ] || [ "$STATUS" = "TimedOut" ]; then exit 1; fi
+            sleep 10
+          done
+          exit 1
