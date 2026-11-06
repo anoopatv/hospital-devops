@@ -2,7 +2,7 @@ import os
 import time
 
 import psycopg2
-from flask import Flask, Response, request
+from flask import Flask, Response, render_template, request
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 app = Flask(__name__)
@@ -63,7 +63,7 @@ init_db()
 
 @app.route("/")
 def home():
-    return "Hospital Token System"
+    return render_template("index.html")
 
 
 @app.route("/token/<doctor>/new")

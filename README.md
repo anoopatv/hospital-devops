@@ -36,6 +36,8 @@ Doctors available: `dr-anil`, `dr-meera`, `dr-suresh`
 ```
 docker compose up --build
 This also starts Prometheus (`http://localhost:9090`) and Grafana (`http://localhost:3000`, login `admin` / `admin123`). Grafana is already connected to Prometheus.
+The front page is available at `http://localhost:5000`.
+
 ```
 
 Then open `http://localhost:5000/token/dr-anil/new` in the browser.
@@ -50,6 +52,10 @@ Then open `http://localhost:5000/token/dr-anil/new` in the browser.
 The AWS infrastructure (EC2, Security Group, ECR, IAM role) is created with Terraform.
 
 ## Screenshots
+
+**Front page**
+
+![Front page](docs/frontpage.png)
 
 **CI/CD pipeline (GitHub Actions)**
 

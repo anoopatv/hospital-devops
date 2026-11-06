@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hospital Token System</title>
+<style>
+  :root{--bg:#f4f7fb;--card:#fff;--text:#1b2a3a;--muted:#5d6b7a;--accent:#1f6feb;--ok:#1a7f37;--bad:#cf222e;--line:#e1e7ef}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:#12263f;color:#fff;padding:20px 24px}
+  header h1{margin:0;font-size:22px}
+  header p{margin:4px 0 0;color:#b8c7da;font-size:14px}
+  main{max-width:1000px;margin:0 auto;padding:20px}
+  h2{font-size:17px;margin:26px 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .doctor h3{margin:0 0 8px;font-size:16px}
+  .big{font-size:38px;font-weight:700;color:var(--accent);line-height:1.1}
+  .muted{color:var(--muted);font-size:13px}
+  button{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 14px;font-size:14px;cursor:pointer;margin-top:10px}
+  button:hover{opacity:.9}
+  .tokens{margin-top:8px;font-size:13px;color:var(--muted);word-break:break-word}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#eef1f5}
+  .ok{background:#dafbe1;color:var(--ok)}
+  .bad{background:#ffebe9;color:var(--bad)}
+  ul{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.7}
+  a{color:var(--accent)}
+  ol.flow{font-size:14px;line-height:1.8;padding-left:20px;margin:0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Hospital Token System</h1>
+  <p>OP counter token queue. DevOps project: Docker, Terraform, GitHub Actions, AWS, Kubernetes, Prometheus, Grafana</p>
+</header>
+<main>
+  <h2>Get a token</h2>
+  <div class="grid" id="doctors"></div>
+
+  <h2>System status</h2>
+  <div class="grid">
+    <div class="card">
+      <div>Application: <span id="health" class="pill">checking...</span></div>
+      <p class="muted" id="host"></p>
+    </div>
+    <div class="card">
+      <strong>Endpoints</strong>
+      <ul>
+        <li><a href="/health" target="_blank">/health</a></li>
+        <li><a href="/metrics" target="_blank">/metrics</a> (Prometheus metrics)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <strong>Monitoring</strong>
+      <ul id="monitoring-links"></ul>
+    </div>
+  </div>
+
+  <h2>How this project is built and deployed</h2>
+  <div class="card">
+    <ol class="flow">
+      <li>Code is pushed to the <code>main</code> branch on GitHub.</li>
+      <li>GitHub Actions builds the Docker image and pushes it to Amazon ECR.</li>
+      <li>AWS SSM runs the deployment on the EC2 server (app and PostgreSQL containers).</li>
+      <li>EC2, security group, ECR and IAM roles are created with Terraform.</li>
+      <li>Kubernetes manifests run the app with 2 replicas on a local cluster.</li>
+      <li>Prometheus scrapes <code>/metrics</code> and Grafana shows the graphs (Docker Compose).</li>
+    </ol>
+    <p class="muted">Source code: <a href="https://github.com/anoopatv/hospital-devops" target="_blank">github.com/anoopatv/hospital-devops</a></p>
+  </div>
+</main>
+
+<script>
+const DOCTORS = [["dr-anil", "Dr. Anil"], ["dr-meera", "Dr. Meera"], ["dr-suresh", "Dr. Suresh"]];
+const box = document.getElementById("doctors");
+
+DOCTORS.forEach(([id, name]) => {
+  const div = document.createElement("div");
+  div.className = "card doctor";
+  div.innerHTML =
+    "<h3>" + name + "</h3>" +
+    '<div class="big" id="last-' + id + '">-</div>' +
+    '<div class="muted">latest token</div>' +
+    '<button onclick="newToken(\'' + id + '\')">Get token</button>' +
+    '<div class="tokens" id="list-' + id + '"></div>';
+  box.appendChild(div);
+  loadList(id);
+});
+
+async function loadList(id) {
+  try {
+    const r = await fetch("/token/" + id + "/list");
+    const d = await r.json();
+    const t = d.tokens || [];
+    document.getElementById("last-" + id).textContent = t.length ? t[t.length - 1] : "-";
+    document.getElementById("list-" + id).textContent =
+      t.length ? "Recent: " + t.slice(-10).join(", ") : "No tokens yet";
+  } catch (e) {
+    document.getElementById("list-" + id).textContent = "Could not load tokens";
+  }
+}
+
+async function newToken(id) {
+  await fetch("/token/" + id + "/new");
+  loadList(id);
+}
+
+const healthEl = document.getElementById("health");
+fetch("/health")
+  .then(r => r.json())
+  .then(d => {
+    const ok = d.status === "ok";
+    healthEl.textContent = ok ? "Running" : "Problem";
+    healthEl.className = "pill " + (ok ? "ok" : "bad");
+  })
+  .catch(() => {
+    healthEl.textContent = "Not reachable";
+    healthEl.className = "pill bad";
+  });
+
+document.getElementById("host").textContent = "Served from: " + location.host;
+
+const links = document.getElementById("monitoring-links");
+const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+if (local) {
+  links.innerHTML =
+    '<li><a href="http://' + location.hostname + ':3000" target="_blank">Grafana</a> (admin / admin123)</li>' +
+    '<li><a href="http://' + location.hostname + ':9090" target="_blank">Prometheus</a></li>';
+} else {
+  links.innerHTML = "<li>Prometheus and Grafana run locally with Docker Compose.</li>";
+}
+</script>
+</body>
+</html>
