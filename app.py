@@ -2,11 +2,27 @@ import os
 import time
 
 import psycopg2
-from flask import Flask
+from flask import Flask, Response, request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 app = Flask(__name__)
 
 DOCTORS = ["dr-anil", "dr-meera", "dr-suresh"]
+
+# Prometheus metrics
+TOKENS_GENERATED = Counter(
+    "tokens_generated_total", "Total tokens generated", ["doctor"]
+)
+HTTP_REQUESTS = Counter(
+    "http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"]
+)
+
+
+@app.after_request
+def count_requests(response):
+    endpoint = request.url_rule.rule if request.url_rule else "unknown"
+    HTTP_REQUESTS.labels(request.method, endpoint, response.status_code).inc()
+    return response
 
 
 def get_connection():
@@ -68,6 +84,7 @@ def new_token(doctor):
     conn.commit()
     cur.close()
     conn.close()
+    TOKENS_GENERATED.labels(doctor).inc()
     return {"doctor": doctor, "token": number}
 
 
@@ -90,6 +107,11 @@ def list_tokens(doctor):
 @app.route("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.route("/metrics")
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ The focus of this project is the DevOps part: containerizing the app and deployi
 - Amazon ECR
 - GitHub Actions
 - Kubernetes (Docker Desktop, local cluster)
+- Prometheus and Grafana (Docker Compose)
 - AWS Systems Manager (SSM)
 - Git and GitHub
 
@@ -26,6 +27,7 @@ The focus of this project is the DevOps part: containerizing the app and deployi
 | `/token/<doctor>/new` | Generate a new token for a doctor |
 | `/token/<doctor>/list` | List all tokens of a doctor |
 | `/health` | Health check |
+| `/metrics` | Prometheus metrics (tokens generated, HTTP requests) |
 
 Doctors available: `dr-anil`, `dr-meera`, `dr-suresh`
 
@@ -33,6 +35,7 @@ Doctors available: `dr-anil`, `dr-meera`, `dr-suresh`
 
 ```
 docker compose up --build
+This also starts Prometheus (`http://localhost:9090`) and Grafana (`http://localhost:3000`, login `admin` / `admin123`). Grafana is already connected to Prometheus.
 ```
 
 Then open `http://localhost:5000/token/dr-anil/new` in the browser.
@@ -64,6 +67,10 @@ The AWS infrastructure (EC2, Security Group, ECR, IAM role) is created with Terr
 
 ![Kubernetes](docs/k8s.png)
 
+**Grafana dashboard (tokens generated per doctor)**
+
+![Grafana](docs/grafana.png)
+
 ## Project Progress
 
 - [x] Flask app
@@ -72,4 +79,4 @@ The AWS infrastructure (EC2, Security Group, ECR, IAM role) is created with Terr
 - [x] AWS infrastructure with Terraform
 - [x] Kubernetes deployment
 - [x] CI/CD pipeline with GitHub Actions
-- [ ] Monitoring with Prometheus and Grafana
+- [x] Monitoring with Prometheus and Grafana
